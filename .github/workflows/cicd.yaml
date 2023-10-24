@@ -5,7 +5,8 @@ on:
     branches:
       # - main
       # - develop
-      - prod
+      # - prod
+      - master
 
 jobs:
   #continuous integration
@@ -47,7 +48,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - run: echo "VERSION=v$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - run: echo "VERSION=v1.0.0-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       
       - name: BuildPush
         id: build-image
@@ -75,7 +76,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - run: echo "VERSION=v$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - run: echo "VERSION=v1.0.0-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
  
       - name: Increment version
         run: |

@@ -4,7 +4,7 @@ _DANGER := "\033[31m[%s]\033[0m %s\n"
 _INFO := "\033[1;34m[%s]\033[0m %s\n"
 _ATTAINTION := "\033[93m[%s]\033[0m %s\n"
 #APP for test 
-IMAGE_BUILDER := node:20-alpine
+IMAGE_BUILDER := node:12-alpine
 
 STATIC_DOCKERFILE := Dockerfile.stub
 DOCKERFILE := Dockerfile
