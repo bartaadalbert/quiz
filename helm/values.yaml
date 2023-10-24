@@ -3,10 +3,10 @@
 # Declare variables to be passed into your templates.
 #change
 replicaCount: 5
-chartVersion: 0.3.0
+chartVersion: 0.4.0
 image:
   repository: ghcr.io/bartaadalbert/quiz
-  tag: "v1.0.0-e27413a"
+  tag: "v1.0.0-c51f26c"
   os: linux
   arch: amd64
   pullPolicy: Always
