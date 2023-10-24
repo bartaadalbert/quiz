@@ -11,14 +11,14 @@ image:
   pullPolicy: Always
 secret:
   envName: REACT_APP_API_KEY
-  tokenName: thecars_pubkey
+  tokenName: my_pubkey
   tokenKey: reactToken
 service:
   type: LoadBalancer
   port: 8000
   targetPort: 80
 imagePullSecrets:
-  - name: pull-secret
+  - name: ghcrio-pull-secret
 nameOverride: ""
 fullnameOverride: ""
 serviceAccount:
