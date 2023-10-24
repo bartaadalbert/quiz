@@ -1,0 +1,105 @@
+name: CICD-thecars
+
+on:
+  push:
+    branches:
+      # - main
+      # - develop
+      - prod
+
+jobs:
+  #continuous integration
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js and npm
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20.5'
+
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ secrets.AWS_REGION }}
+
+      # - name: Login to Amazon ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          # username: ${{ github.actor }}
+          username: bartaadalbert
+          password: ${{ secrets.TOKEN_GITHUB }}
+
+      - name: Extract repository name
+        id: extract_repo
+        run: echo "APP=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 2)" >> $GITHUB_ENV
+      
+        #GET THE VERSION
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: echo "VERSION=v$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      
+      - name: BuildPush
+        id: build-image
+        # env:
+          # ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          # ECR_REPOSITORY: webthecars
+        # run: make image push APP=${{ env.APP }} REGISTRY=$ECR_REGISTRY VERSION=${{env.VERSION}}
+        # run: make image push APP=${{ env.APP }} REGISTRY=ghcr.io/${{ github.actor }} VERSION=${{env.VERSION}}
+        run: make image push APP=${{ env.APP }} REGISTRY=ghcr.io/bartaadalbert VERSION=${{env.VERSION}}
+  
+  #continuous delivery
+  cd:
+    name: CD
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install jq and ssh
+        run: sudo apt-get update && sudo apt-get install -y jq && sudo apt-get install -y ssh
+      - name: Install yq
+        run: |
+          sudo add-apt-repository ppa:rmescandon/yq
+          sudo apt update
+          sudo apt install yq -y
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: echo "VERSION=v$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+ 
+      - name: Increment version
+        run: |
+          # Read version from helm/values.yaml
+          CVERSION=$(yq e '.chartVersion' helm/values.yaml)
+          
+          # Split into major, minor and patch
+          MAJOR_VERSION=$(echo $CVERSION | cut -d. -f1)
+          MINOR_VERSION=$(echo $CVERSION | cut -d. -f2)
+          PATCH_VERSION=$(echo $CVERSION | cut -d. -f3)
+          
+          # Increment minor version
+          NEW_VERSION="${MAJOR_VERSION}.$((MINOR_VERSION + 1)).${PATCH_VERSION}"
+          
+          # Update values.yaml with new version
+          yq e -i ".chartVersion = \"$NEW_VERSION\"" helm/values.yaml
+        
+      - name: Modify values.yaml
+        run: |
+          yq e -i ".image.tag = \"${{ env.VERSION }}\"" helm/values.yaml
+
+      #GIT TOKEN NEW VALUE RW
+      - run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+          git commit -am "update version $VERSION"
+          git push
