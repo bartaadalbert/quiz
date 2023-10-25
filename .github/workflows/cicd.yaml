@@ -1,4 +1,4 @@
-name: CICD-thecars
+name: CICD-quiz
 
 on:
   push:
@@ -54,7 +54,7 @@ jobs:
         id: build-image
         # env:
           # ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          # ECR_REPOSITORY: webthecars
+          # ECR_REPOSITORY: webquiz
         # run: make image push APP=${{ env.APP }} REGISTRY=$ECR_REGISTRY VERSION=${{env.VERSION}}
         # run: make image push APP=${{ env.APP }} REGISTRY=ghcr.io/${{ github.actor }} VERSION=${{env.VERSION}}
         run: make image push APP=${{ env.APP }} REGISTRY=ghcr.io/bartaadalbert VERSION=${{env.VERSION}}
